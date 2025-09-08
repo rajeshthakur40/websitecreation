@@ -1,0 +1,873 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SQL Interactive Sandbox</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        /* Custom styles for animations and aesthetics */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #111827; /* bg-gray-900 */
+        }
+        
+        .animated-gradient {
+            background: linear-gradient(-45deg, #a855f7, #6366f1, #3b82f6, #06b6d4);
+            background-size: 400% 400%;
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: gradient-animation 15s ease infinite;
+        }
+
+        @keyframes gradient-animation {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .banner-bg {
+            background-color: #1f2937; /* bg-gray-800 */
+            background-image: 
+                radial-gradient(circle at 25% 25%, rgba(59, 130, 246, 0.1) 0%, transparent 40%),
+                radial-gradient(circle at 75% 75%, rgba(168, 85, 247, 0.1) 0%, transparent 40%);
+            animation: background-pan 20s linear infinite;
+            background-size: 200% 200%;
+        }
+
+        @keyframes background-pan {
+            0% { background-position: 0% 0%; }
+            25% { background-position: 100% 0%; }
+            50% { background-position: 100% 100%; }
+            75% { background-position: 0% 100%; }
+            100% { background-position: 0% 0%; }
+        }
+
+        /* Custom scrollbar for better dark mode experience */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #1f2937; /* bg-gray-800 */
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #4b5563; /* bg-gray-600 */
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #6b7280; /* bg-gray-500 */
+        }
+    </style>
+</head>
+<body class="bg-gray-900 text-gray-200">
+
+    <!-- Main Container -->
+    <div class="container mx-auto p-4 md:p-8">
+
+        <!-- 1. Banner Section -->
+        <header class="banner-bg text-center p-6 md:p-8 rounded-xl shadow-2xl mb-8 border border-gray-700">
+            <h1 class="text-4xl md:text-5xl font-bold animated-gradient mb-2">SQL Playground</h1>
+            <p class="text-lg text-gray-400">An interactive sandbox to practice your SQL skills.</p>
+        </header>
+
+        <!-- Main Content Grid -->
+        <div class="flex flex-col gap-8">
+            <!-- 3. SQL Query Section -->
+            <section id="sql-query" class="bg-gray-800 p-6 rounded-xl shadow-lg border border-gray-700">
+                <h2 class="text-2xl font-semibold text-gray-100 mb-4">Query Editor</h2>
+                <textarea id="query-editor" class="w-full h-48 p-3 bg-gray-900 border border-gray-600 rounded-lg text-gray-200 font-mono focus:ring-2 focus:ring-blue-500 focus:outline-none resize-y" placeholder="SELECT * FROM employees;"></textarea>
+                <div class="mt-4 flex flex-col md:flex-row gap-4 items-center">
+                    <button id="execute-query-btn" class="w-full md:w-auto bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-6 rounded-lg transition duration-200">Execute Query</button>
+                    <div id="loader" class="hidden w-6 h-6 border-4 border-dashed rounded-full animate-spin border-blue-400"></div>
+                </div>
+                <div class="mt-6">
+                    <div class="flex items-center justify-between mb-3">
+                        <h3 class="text-lg font-semibold text-gray-300">Sample Queries</h3>
+                        <button id="refresh-queries-btn" class="text-gray-400 hover:text-white transition" title="Generate New Samples">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 110 2H4a1 1 0 01-1-1V4a1 1 0 011-1zm10 15a1 1 0 01-1-1v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 111.885-.666A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 01-1 1z" clip-rule="evenodd" />
+                            </svg>
+                        </button>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-3">
+                        <div>
+                            <h4 class="text-md font-semibold text-gray-400 mb-2 border-b border-gray-700 pb-1">Data Viewing</h4>
+                            <div id="data-viewing-queries" class="flex flex-wrap gap-2 pt-2">
+                                <!-- Viewing query buttons will be inserted here -->
+                            </div>
+                        </div>
+                        <div>
+                            <h4 class="text-md font-semibold text-gray-400 mb-2 border-b border-gray-700 pb-1">Data Operations</h4>
+                            <div id="data-operations-queries" class="flex flex-wrap gap-2 pt-2">
+                                <!-- Operations query buttons will be inserted here -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 4. Results Section -->
+            <section id="results" class="bg-gray-800 p-6 rounded-xl shadow-lg border border-gray-700">
+                <h2 class="text-2xl font-semibold text-gray-100 mb-4">Results</h2>
+                <div id="results-container" class="overflow-auto max-h-[75vh] font-mono text-sm">
+                    <p class="text-gray-500">Query results will appear here.</p>
+                </div>
+            </section>
+
+            <!-- 2. Database Schema & Management Section -->
+            <section id="db-management" class="bg-gray-800 p-6 rounded-xl shadow-lg border border-gray-700">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-2xl font-semibold text-gray-100">Database Schema</h2>
+                    <button id="create-table-btn" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg transition duration-200">Create New Table</button>
+                </div>
+                <div id="schema-container" class="space-y-4">
+                    <!-- Table cards will be dynamically inserted here -->
+                     <div class="text-center p-4">
+                        <span class="text-gray-400">Loading Database...</span>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </div>
+
+    <!-- Modal for Create New Table -->
+    <div id="create-table-modal" class="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center hidden z-50">
+        <div class="bg-gray-800 rounded-lg shadow-xl p-8 w-full max-w-lg border border-gray-600">
+            <h3 class="text-2xl font-semibold mb-2">Create New Table</h3>
+            <p class="text-sm text-gray-400 mb-4">Here's a sample table to get you started. You can modify the name, columns, and initial data before creating.</p>
+            <div class="space-y-4">
+                <input type="text" id="new-table-name" class="w-full p-2 bg-gray-700 border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Table Name (e.g., departments)">
+                <textarea id="new-table-cols" class="w-full h-24 p-2 bg-gray-700 border border-gray-600 rounded-md font-mono focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Column Definitions (e.g., id INTEGER, name TEXT)"></textarea>
+                <textarea id="new-table-data" class="w-full h-20 p-2 bg-gray-700 border border-gray-600 rounded-md font-mono focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Optional: Initial rows of data (one per line). E.g., 1, 'Sales', 'New York'"></textarea>
+            </div>
+            <div class="mt-6 flex justify-end gap-4">
+                <button id="cancel-create-table-btn" class="bg-gray-600 hover:bg-gray-700 text-white font-semibold py-2 px-4 rounded-md transition">Cancel</button>
+                <button id="submit-create-table-btn" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-md transition">Create</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- sql.js library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.10.3/sql-wasm.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            // --- CONFIGURATION AND STATE ---
+            const config = {
+                locateFile: filename => `https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.10.3/${filename}`
+            };
+            let db; // The database object
+            
+            // --- UI ELEMENTS ---
+            const schemaContainer = document.getElementById('schema-container');
+            const queryEditor = document.getElementById('query-editor');
+            const executeBtn = document.getElementById('execute-query-btn');
+            const resultsContainer = document.getElementById('results-container');
+            const dataViewingQueriesContainer = document.getElementById('data-viewing-queries');
+            const dataOperationsQueriesContainer = document.getElementById('data-operations-queries');
+            const refreshQueriesBtn = document.getElementById('refresh-queries-btn');
+            const loader = document.getElementById('loader');
+            
+            // Modal Elements
+            const createTableModal = document.getElementById('create-table-modal');
+            const createTableBtn = document.getElementById('create-table-btn');
+            const cancelCreateTableBtn = document.getElementById('cancel-create-table-btn');
+            const submitCreateTableBtn = document.getElementById('submit-create-table-btn');
+
+            // --- DATABASE INITIALIZATION ---
+            async function initDatabase() {
+                try {
+                    const SQL = await initSqlJs(config);
+                    const savedDb = localStorage.getItem('sql_sandbox_db');
+
+                    if (savedDb) {
+                        const binaryDb = base64ToUint8Array(savedDb);
+                        db = new SQL.Database(binaryDb);
+                        console.log("Database loaded from localStorage.");
+                    } else {
+                        db = new SQL.Database();
+                        // 1. Create initial tables
+                        db.exec(`
+                            CREATE TABLE employees (id INTEGER PRIMARY KEY, first_name TEXT, last_name TEXT, hire_date DATE);
+                            CREATE TABLE salaries (employee_id INTEGER, salary REAL, from_date DATE, to_date DATE);
+                            CREATE TABLE contacts (employee_id INTEGER, email TEXT, phone TEXT);
+                        `);
+
+                        // 2. Populate tables with mock data
+                        db.exec(`
+                            INSERT INTO employees VALUES (1, 'John', 'Doe', '2022-01-15'), (2, 'Jane', 'Smith', '2021-03-20'), (3, 'Peter', 'Jones', '2022-05-10'), (4, 'Mary', 'Williams', '2020-11-30'), (5, 'David', 'Brown', '2023-02-28');
+                            INSERT INTO salaries VALUES (1, 75000, '2022-01-15', '9999-12-31'), (2, 85000, '2021-03-20', '9999-12-31'), (3, 65000, '2022-05-10', '9999-12-31'), (4, 95000, '2020-11-30', '9999-12-31'), (5, 70000, '2023-02-28', '9999-12-31');
+                            INSERT INTO contacts VALUES (1, 'john.doe@example.com', '123-456-7890'), (2, 'jane.smith@example.com', '234-567-8901'), (3, 'peter.jones@example.com', '345-678-9012'), (4, 'mary.w@example.com', '456-789-0123'), (5, 'd.brown@example.com', '567-890-1234');
+                        `);
+                         console.log("Initialized new database.");
+                        saveDatabase(); // Save the initial state
+                    }
+                    
+                    // 3. Render the initial UI
+                    await renderSchema();
+                    populateSampleQueries();
+                } catch (err) {
+                    console.error("Database initialization failed:", err);
+                    schemaContainer.innerHTML = `<div class="bg-red-900 border border-red-500 text-red-200 p-4 rounded-lg">Error initializing database. Check console for details.</div>`;
+                }
+            }
+
+            // --- PERSISTENCE HELPERS ---
+            function saveDatabase() {
+                if (!db) return;
+                try {
+                    const binaryDb = db.export();
+                    const base64Db = uint8ArrayToBase64(binaryDb);
+                    localStorage.setItem('sql_sandbox_db', base64Db);
+                    console.log("Database saved to localStorage.");
+                } catch (e) {
+                    console.error("Failed to save database:", e);
+                    alert("Could not save the database. Your browser's localStorage might be full or disabled.");
+                }
+            }
+            
+            function uint8ArrayToBase64(bytes) {
+                let binary = '';
+                const len = bytes.byteLength;
+                for (let i = 0; i < len; i++) {
+                    binary += String.fromCharCode(bytes[i]);
+                }
+                return window.btoa(binary);
+            }
+
+            function base64ToUint8Array(base64) {
+                const binary_string = window.atob(base64);
+                const len = binary_string.length;
+                const bytes = new Uint8Array(len);
+                for (let i = 0; i < len; i++) {
+                    bytes[i] = binary_string.charCodeAt(i);
+                }
+                return bytes;
+            }
+
+            // --- UI RENDERING FUNCTIONS ---
+
+            // Main function to render all tables in the schema section
+            async function renderSchema() {
+                schemaContainer.innerHTML = '';
+                const tables = db.exec("SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%';");
+                if (tables.length > 0) {
+                    tables[0].values.forEach(tableNameArr => {
+                        const tableName = tableNameArr[0];
+                        schemaContainer.appendChild(createTableCard(tableName));
+                    });
+                } else {
+                    schemaContainer.innerHTML = `<p class="text-gray-500">No tables found. Create a new one!</p>`;
+                }
+            }
+
+            // Creates a single table card with collapsible functionality
+            function createTableCard(tableName) {
+                const card = document.createElement('div');
+                card.className = 'bg-gray-700 rounded-lg border border-gray-600';
+
+                const header = document.createElement('div');
+                header.className = 'p-4 flex justify-between items-center cursor-pointer';
+                header.innerHTML = `
+                    <h3 class="text-xl font-medium text-gray-100">${tableName}</h3>
+                    <svg class="w-6 h-6 transform transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                `;
+
+                const content = document.createElement('div');
+                content.className = 'hidden p-4 border-t border-gray-600';
+
+                header.onclick = () => {
+                    const isHidden = content.classList.toggle('hidden');
+                    header.querySelector('svg').classList.toggle('rotate-180', !isHidden);
+                    if (!isHidden) {
+                        renderTableData(tableName, content);
+                    }
+                };
+                
+                card.appendChild(header);
+                card.appendChild(content);
+                return card;
+            }
+
+            // Renders the data for a specific table inside its card
+            function renderTableData(tableName, container) {
+                try {
+                    const res = db.exec(`SELECT * FROM ${tableName}`);
+                    if (res.length === 0 || res[0].values.length === 0) {
+                        container.innerHTML = `<p class="text-gray-400">Table is empty.</p>`;
+                    } else {
+                        const { columns, values } = res[0];
+                        const table = document.createElement('table');
+                        table.className = 'w-full text-left text-sm';
+                        
+                        // Table Head
+                        const thead = table.createTHead();
+                        thead.className = "bg-gray-800";
+                        let tr = thead.insertRow();
+                        columns.forEach(col => {
+                            const th = document.createElement('th');
+                            th.className = "p-2 font-semibold";
+                            th.textContent = col;
+                            tr.appendChild(th);
+                        });
+                        const actionTh = document.createElement('th');
+                        actionTh.className = "p-2 font-semibold text-right";
+                        actionTh.textContent = "Actions";
+                        tr.appendChild(actionTh);
+                        
+                        // Table Body
+                        const tbody = table.createTBody();
+                        values.forEach((row, rowIndex) => {
+                            tr = tbody.insertRow();
+                            tr.className = "border-t border-gray-600";
+                            row.forEach((cell, cellIndex) => {
+                                const td = tr.insertCell();
+                                td.className = "p-2";
+                                td.textContent = cell;
+                            });
+                            
+                            // Action Buttons
+                            const actionTd = tr.insertCell();
+                            actionTd.className = "p-2 text-right space-x-2";
+                            
+                            const editBtn = document.createElement('button');
+                            editBtn.textContent = 'Edit';
+                            editBtn.className = 'text-blue-400 hover:text-blue-300 transition';
+                            editBtn.onclick = () => editRow(tableName, columns, row, tr, container);
+
+                            const deleteBtn = document.createElement('button');
+                            deleteBtn.textContent = 'Delete';
+                            deleteBtn.className = 'text-red-400 hover:text-red-300 transition';
+                            deleteBtn.onclick = () => deleteRow(tableName, columns, row, container);
+
+                            actionTd.appendChild(editBtn);
+                            actionTd.appendChild(deleteBtn);
+                        });
+
+                        container.innerHTML = '';
+                        container.appendChild(table);
+                    }
+                    // Add "Add New Row" button at the bottom
+                    const addRowButton = document.createElement('button');
+                    addRowButton.textContent = 'Add New Row';
+                    addRowButton.className = 'mt-4 bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 rounded-lg transition text-sm';
+                    addRowButton.onclick = () => showInsertForm(tableName, container);
+                    container.appendChild(addRowButton);
+
+                } catch (e) {
+                    container.innerHTML = `<p class="text-red-400">${e.message}</p>`;
+                }
+            }
+            
+            // --- DYNAMIC SAMPLE QUERY GENERATION ---
+            function populateSampleQueries() {
+                // Clear existing buttons
+                dataViewingQueriesContainer.innerHTML = ''; 
+                dataOperationsQueriesContainer.innerHTML = ''; 
+
+                const viewingQueryGenerators = [
+                    generateSelectStarQuery,
+                    generateSelectWhereQuery,
+                    generateJoinQuery,
+                    generateAggregateQuery,
+                    generateOrderLimitQuery
+                ];
+
+                const operationsQueryGenerators = [
+                    generateInsertQuery,
+                    generateUpdateQuery,
+                    generateDeleteQuery
+                ];
+
+                // Helper to populate a container with unique queries
+                const populateContainer = (container, generators, count) => {
+                    const shuffled = generators.sort(() => 0.5 - Math.random());
+                    let generatedQueries = new Set();
+                    for (const generator of shuffled) {
+                        if (generatedQueries.size >= count) break;
+                        const query = generator();
+                        if (query && query.query) {
+                            generatedQueries.add(JSON.stringify(query));
+                        }
+                    }
+
+                    if (generatedQueries.size === 0 && container === dataViewingQueriesContainer) {
+                         generatedQueries.add(JSON.stringify({ name: 'SELECT All Employees', query: 'SELECT * FROM employees;' }));
+                    }
+                    
+                    try {
+                        JSON.parse(`[${Array.from(generatedQueries).join(',')}]`).forEach(q => {
+                            const btn = document.createElement('button');
+                            btn.textContent = q.name;
+                            btn.className = 'bg-gray-600 hover:bg-gray-500 text-gray-200 font-medium py-1 px-3 rounded-md transition text-sm';
+                            btn.onclick = () => { queryEditor.value = q.query; };
+                            container.appendChild(btn);
+                        });
+                    } catch(e) { console.error("Failed to parse generated queries:", e); }
+                };
+
+                populateContainer(dataViewingQueriesContainer, viewingQueryGenerators, 3);
+                populateContainer(dataOperationsQueriesContainer, operationsQueryGenerators, 2);
+            }
+            
+            // Generator function helpers
+            function getTables() {
+                try {
+                    const tablesResult = db.exec("SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%';");
+                    if (tablesResult.length > 0) {
+                        return tablesResult[0].values.map(v => v[0]);
+                    }
+                } catch (e) { /* DB not ready */ }
+                return [];
+            }
+
+            function getTableInfo(tableName) {
+                try {
+                    const infoResult = db.exec(`PRAGMA table_info(${tableName});`);
+                    if (infoResult.length > 0) {
+                        return infoResult[0].values.map(col => ({ name: col[1], type: col[2] }));
+                    }
+                } catch (e) { /* Table might not exist */ }
+                return [];
+            }
+
+            // Generator Functions
+            function generateSelectStarQuery() {
+                const tables = getTables();
+                if (tables.length === 0) return null;
+                const table = tables[Math.floor(Math.random() * tables.length)];
+                return { name: `SELECT All from ${table}`, query: `SELECT * FROM ${table} LIMIT 10;` };
+            }
+
+            function generateSelectWhereQuery() {
+                const tables = getTables();
+                if (tables.length === 0) return null;
+                const table = tables[Math.floor(Math.random() * tables.length)];
+                const columns = getTableInfo(table);
+                if (columns.length === 0) return null;
+                
+                // Prefer TEXT columns for simple WHERE clauses
+                const textColumns = columns.filter(c => c.type === 'TEXT');
+                const columnToQuery = textColumns.length > 0 
+                    ? textColumns[Math.floor(Math.random() * textColumns.length)]
+                    : columns[Math.floor(Math.random() * columns.length)];
+                    
+                if (!columnToQuery) return null;
+
+                try {
+                    const sampleResult = db.exec(`SELECT ${columnToQuery.name} FROM ${table} WHERE ${columnToQuery.name} IS NOT NULL ORDER BY RANDOM() LIMIT 1;`);
+                    if (sampleResult.length > 0 && sampleResult[0].values.length > 0) {
+                        const sampleValue = sampleResult[0].values[0][0];
+                        const valueString = typeof sampleValue === 'string' ? `'${sampleValue.replace(/'/g, "''")}'` : sampleValue;
+                        return { name: `Filter ${table}`, query: `SELECT * FROM ${table} WHERE ${columnToQuery.name} = ${valueString} LIMIT 10;` };
+                    }
+                } catch (e) { /* Fails silently if query error */ }
+                return null;
+            }
+            
+            function generateJoinQuery() {
+                const tables = getTables();
+                if (tables.length < 2) return null;
+
+                let tableA, tableB, pk, fk;
+
+                for (const tA of tables) {
+                    const colsA = getTableInfo(tA).map(c => c.name.toLowerCase());
+                    const pkCandidate = getTableInfo(tA).find(c => c.name.toLowerCase() === 'id')?.name;
+                    if (!pkCandidate) continue;
+
+                    for (const tB of tables) {
+                        if (tA === tB) continue;
+                        const fkCandidate = getTableInfo(tB).find(c => c.name.toLowerCase() === `${tA.slice(0, -1)}_id`.toLowerCase() || c.name.toLowerCase() === `${tA}_id`.toLowerCase())?.name;
+                        
+                        if (fkCandidate) {
+                            tableA = tA;
+                            tableB = tB;
+                            pk = pkCandidate;
+                            fk = fkCandidate;
+                            break;
+                        }
+                    }
+                    if (tableA) break;
+                }
+
+                if (tableA && tableB && pk && fk) {
+                    const colsA_sample = getTableInfo(tableA).slice(0, 2).map(c => `a.${c.name}`).join(', ');
+                    const colsB_sample = getTableInfo(tableB).slice(1, 3).map(c => `b.${c.name}`).join(', ');
+                    return {
+                        name: `JOIN ${tableA} & ${tableB}`,
+                        query: `SELECT ${colsA_sample || 'a.*'}, ${colsB_sample || 'b.*'}\nFROM ${tableA} a\nJOIN ${tableB} b ON a.${pk} = b.${fk}\nLIMIT 10;`
+                    };
+                }
+                return null;
+            }
+            
+            function generateAggregateQuery() {
+                const tables = getTables();
+                if (tables.length === 0) return null;
+                const table = tables[Math.floor(Math.random() * tables.length)];
+                const columns = getTableInfo(table);
+                
+                const numericColumns = columns.filter(c => ['REAL', 'INTEGER'].includes(c.type.toUpperCase()));
+                if (numericColumns.length > 0) {
+                    const numCol = numericColumns[Math.floor(Math.random() * numericColumns.length)];
+                    return { name: `Aggregate on ${table}`, query: `SELECT\n  COUNT(*) AS total_rows,\n  AVG(${numCol.name}) AS avg_${numCol.name}\nFROM ${table};`};
+                }
+                
+                return { name: `Count from ${table}`, query: `SELECT COUNT(*) FROM ${table};`};
+            }
+
+            function generateOrderLimitQuery() {
+                const tables = getTables();
+                if (tables.length === 0) return null;
+                const table = tables[Math.floor(Math.random() * tables.length)];
+                const columns = getTableInfo(table);
+                if (columns.length === 0) return null;
+                const col = columns[Math.floor(Math.random() * columns.length)];
+                return { name: `Order ${table}`, query: `SELECT * FROM ${table} ORDER BY ${col.name} DESC LIMIT 10;`};
+            }
+
+            function generateInsertQuery() {
+                const tables = getTables();
+                if (tables.length === 0) return null;
+                const table = tables[Math.floor(Math.random() * tables.length)];
+                const columnsInfo = getTableInfo(table);
+                const pkCol = columnsInfo.find(c => c.type.toUpperCase().includes('PRIMARY KEY'));
+
+                // Filter out PK if it's likely an autoincrementing integer
+                const columnsToInsert = pkCol && pkCol.type.toUpperCase().includes('INTEGER') 
+                    ? columnsInfo.filter(c => c.name !== pkCol.name) 
+                    : columnsInfo;
+                
+                if (columnsToInsert.length === 0) return null;
+
+                const values = columnsToInsert.map(c => {
+                    const type = c.type.toUpperCase();
+                    if (type.includes('TEXT') || type.includes('CHAR')) return "'New Value'";
+                    if (type.includes('DATE')) return "'2025-01-01'";
+                    if (type.includes('REAL')) return (Math.random() * 1000).toFixed(2);
+                    return Math.floor(Math.random() * 100);
+                });
+
+                const columnNames = columnsToInsert.map(c => c.name).join(', ');
+                return { name: `Add to ${table}`, query: `INSERT INTO ${table} (${columnNames})\nVALUES (${values.join(', ')});` };
+            }
+
+            function generateUpdateQuery() {
+                const tables = getTables();
+                if (tables.length === 0) return null;
+                const table = tables[Math.floor(Math.random() * tables.length)];
+                const columns = getTableInfo(table);
+                
+                // Find a row to update
+                let randomRowResult;
+                try {
+                    randomRowResult = db.exec(`SELECT * FROM ${table} ORDER BY RANDOM() LIMIT 1;`);
+                } catch (e) { return null; }
+
+                if (!randomRowResult || randomRowResult.length === 0 || randomRowResult[0].values.length === 0) return null;
+
+                const row = randomRowResult[0].values[0];
+                const colNames = randomRowResult[0].columns;
+
+                const pkIndex = colNames.findIndex(c => c.toLowerCase() === 'id');
+                if (pkIndex === -1) return null; // Can't safely update without a PK
+                
+                // Find a non-pk column to update
+                let colToUpdateIndex = colNames.findIndex((c, i) => i !== pkIndex && c.toLowerCase() !== 'employee_id');
+                if (colToUpdateIndex === -1) colToUpdateIndex = colNames.length > 1 ? (pkIndex + 1) % colNames.length : -1;
+                if (colToUpdateIndex === -1) return null;
+
+                const colToUpdateName = colNames[colToUpdateIndex];
+                const pkValue = row[pkIndex];
+                const newValue = `'Updated ${new Date().toLocaleTimeString()}'`;
+
+                return { name: `Update ${table}`, query: `UPDATE ${table}\nSET ${colToUpdateName} = ${newValue}\nWHERE ${colNames[pkIndex]} = ${pkValue};`};
+            }
+
+            function generateDeleteQuery() {
+                const tables = getTables();
+                if (tables.length === 0) return null;
+                const table = tables[Math.floor(Math.random() * tables.length)];
+                
+                let randomRowResult;
+                try {
+                    randomRowResult = db.exec(`SELECT * FROM ${table} ORDER BY RANDOM() LIMIT 1;`);
+                } catch (e) { return null; }
+
+                if (!randomRowResult || randomRowResult.length === 0 || randomRowResult[0].values.length === 0) return null;
+
+                const row = randomRowResult[0].values[0];
+                const colNames = randomRowResult[0].columns;
+                const pkIndex = colNames.findIndex(c => c.toLowerCase() === 'id');
+                if (pkIndex === -1) return null;
+
+                const pkValue = row[pkIndex];
+                return { name: `Delete from ${table}`, query: `DELETE FROM ${table}\nWHERE ${colNames[pkIndex]} = ${pkValue};` };
+            }
+
+            // --- CRUD AND DATA MANIPULATION LOGIC ---
+
+            // Deletes a row and refreshes the view
+            function deleteRow(tableName, columns, row, container) {
+                // Heuristic to find a primary key or unique identifier
+                const idColumnIndex = columns.findIndex(c => c.toLowerCase().includes('id'));
+                let whereClause;
+                if (idColumnIndex !== -1) {
+                    whereClause = `${columns[idColumnIndex]} = ${row[idColumnIndex]}`;
+                } else {
+                    // Fallback to matching all columns if no ID is found
+                    whereClause = columns.map((col, i) => `${col} = "${row[i]}"`).join(' AND ');
+                }
+                
+                try {
+                    db.exec(`DELETE FROM ${tableName} WHERE ${whereClause};`);
+                    saveDatabase();
+                    renderTableData(tableName, container); // Refresh table view
+                } catch(e) {
+                    console.error("Delete failed:", e);
+                    // You can display an error message to the user here
+                }
+            }
+
+            // Converts a row into an editable form
+            function editRow(tableName, columns, row, tr, container) {
+                tr.innerHTML = ''; // Clear the current row
+                const inputs = [];
+                row.forEach((cell, i) => {
+                    const td = tr.insertCell();
+                    td.className = "p-1";
+                    const input = document.createElement('input');
+                    input.type = 'text';
+                    input.value = cell;
+                    input.className = 'w-full p-1 bg-gray-800 border border-gray-600 rounded';
+                    td.appendChild(input);
+                    inputs.push(input);
+                });
+                
+                const actionTd = tr.insertCell();
+                actionTd.className = "p-1 text-right";
+                const updateBtn = document.createElement('button');
+                updateBtn.textContent = 'Update';
+                updateBtn.className = 'bg-blue-600 hover:bg-blue-700 text-white font-semibold py-1 px-3 rounded text-sm';
+                updateBtn.onclick = () => updateRow(tableName, columns, row, inputs, container);
+                actionTd.appendChild(updateBtn);
+            }
+            
+            // Updates a row in the DB and refreshes the view
+            function updateRow(tableName, columns, oldRow, inputs, container) {
+                const newValues = inputs.map(input => input.value);
+                const setClause = columns.map((col, i) => `${col} = "${newValues[i]}"`).join(', ');
+                
+                // Find identifier for WHERE clause
+                const idColumnIndex = columns.findIndex(c => c.toLowerCase().includes('id'));
+                let whereClause;
+                if (idColumnIndex !== -1) {
+                    whereClause = `${columns[idColumnIndex]} = ${oldRow[idColumnIndex]}`;
+                } else {
+                    whereClause = columns.map((col, i) => `${col} = "${oldRow[i]}"`).join(' AND ');
+                }
+
+                try {
+                    db.exec(`UPDATE ${tableName} SET ${setClause} WHERE ${whereClause}`);
+                    saveDatabase();
+                    renderTableData(tableName, container); // Refresh table view
+                } catch(e) {
+                    console.error("Update failed:", e);
+                    // You can display an error to the user
+                }
+            }
+            
+            // Shows a form to add a new row
+            function showInsertForm(tableName, container) {
+                // Remove existing form if any
+                const existingForm = container.querySelector('.insert-form');
+                if (existingForm) existingForm.remove();
+                
+                const columnsInfo = db.exec(`PRAGMA table_info(${tableName});`)[0].values;
+                const columns = columnsInfo.map(c => c[1]); // Get column names
+
+                const form = document.createElement('div');
+                form.className = 'insert-form mt-4 p-4 bg-gray-800 rounded-lg space-y-2';
+
+                const inputs = {};
+                columns.forEach(colName => {
+                    const input = document.createElement('input');
+                    input.type = 'text';
+                    input.placeholder = colName;
+                    input.className = 'w-full p-2 bg-gray-700 border border-gray-600 rounded-md';
+                    inputs[colName] = input;
+                    form.appendChild(input);
+                });
+
+                const saveBtn = document.createElement('button');
+                saveBtn.textContent = 'Save Row';
+                saveBtn.className = 'bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-md';
+                saveBtn.onclick = () => {
+                    const values = columns.map(col => `"${inputs[col].value}"`).join(', ');
+                    try {
+                        db.exec(`INSERT INTO ${tableName} (${columns.join(', ')}) VALUES (${values})`);
+                        saveDatabase();
+                        renderTableData(tableName, container);
+                    } catch(e) {
+                        console.error("Insert failed:", e);
+                    }
+                };
+                form.appendChild(saveBtn);
+                container.appendChild(form);
+            }
+
+            // --- MAIN QUERY EXECUTION LOGIC ---
+            function executeQuery() {
+                const query = queryEditor.value;
+                if (!query.trim()) {
+                    resultsContainer.innerHTML = '<p class="text-yellow-400">Please enter a query.</p>';
+                    return;
+                }
+                
+                loader.classList.remove('hidden');
+                executeBtn.disabled = true;
+                resultsContainer.innerHTML = '';
+                
+                // Use a short delay to allow the loader to render
+                setTimeout(() => {
+                    try {
+                        const results = db.exec(query);
+                        if (results.length === 0) {
+                            resultsContainer.innerHTML = `<p class="text-green-400">Query executed successfully. No data returned (e.g., for INSERT, UPDATE, DELETE).</p>`;
+                            saveDatabase(); // Save changes on non-SELECT queries
+                            renderSchema(); // Refresh schema in case a table was altered
+                        } else {
+                            renderQueryResults(results[0]);
+                        }
+                    } catch (e) {
+                        resultsContainer.innerHTML = `<div class="bg-red-900 border border-red-500 text-red-200 p-4 rounded-lg"><strong>SQL Error:</strong> ${e.message}</div>`;
+                    } finally {
+                        loader.classList.add('hidden');
+                        executeBtn.disabled = false;
+                    }
+                }, 50); // 50ms delay
+            }
+
+            // Renders the results of a SELECT query into a table
+            function renderQueryResults({ columns, values }) {
+                if (values.length === 0) {
+                    resultsContainer.innerHTML = '<p class="text-gray-400">Query executed successfully, but returned no results.</p>';
+                    return;
+                }
+
+                const table = document.createElement('table');
+                table.className = 'w-full text-left text-xs whitespace-nowrap';
+
+                // Head
+                const thead = table.createTHead();
+                thead.className = "bg-gray-700";
+                let tr = thead.insertRow();
+                columns.forEach(col => {
+                    const th = document.createElement('th');
+                    th.className = "p-2 font-semibold";
+                    th.textContent = col;
+                    tr.appendChild(th);
+                });
+
+                // Body
+                const tbody = table.createTBody();
+                values.forEach(row => {
+                    tr = tbody.insertRow();
+                    tr.className = "border-t border-gray-600";
+                    row.forEach(cell => {
+                        const td = tr.insertCell();
+                        td.className = "p-2";
+                        td.textContent = cell;
+                    });
+                });
+
+                resultsContainer.appendChild(table);
+            }
+
+            // --- MODAL LOGIC FOR CREATING TABLES ---
+            function setupModal() {
+                createTableBtn.onclick = () => {
+                    // Pre-populate with a sample table definition
+                    document.getElementById('new-table-name').value = 'departments';
+                    document.getElementById('new-table-cols').value = 'id INTEGER PRIMARY KEY, name TEXT, location TEXT';
+                    document.getElementById('new-table-data').value = "1, 'Sales', 'New York'\n2, 'Engineering', 'San Francisco'";
+                    createTableModal.classList.remove('hidden');
+                };
+                cancelCreateTableBtn.onclick = () => createTableModal.classList.add('hidden');
+                createTableModal.onclick = (e) => {
+                    if (e.target === createTableModal) {
+                        createTableModal.classList.add('hidden');
+                    }
+                };
+                
+                submitCreateTableBtn.onclick = () => {
+                    const tableName = document.getElementById('new-table-name').value.trim();
+                    const tableCols = document.getElementById('new-table-cols').value.trim();
+                    const tableData = document.getElementById('new-table-data').value.trim();
+                    
+                    if (!tableName || !tableCols) {
+                        alert('Table name and column definitions are required.');
+                        return;
+                    }
+
+                    try {
+                        const createSql = `CREATE TABLE ${tableName} (${tableCols});`;
+                        db.exec(createSql);
+
+                        // If sample data is provided, attempt to insert it
+                        if (tableData) {
+                            // A simple regex to extract column names before their type definitions.
+                            const columnNames = tableCols.split(',')
+                                .map(part => part.trim().split(/\s+/)[0])
+                                .filter(name => name); // filter out any empty strings
+
+                            const rows = tableData.split('\n');
+                            rows.forEach(rowString => {
+                                if (rowString.trim()) {
+                                    // The user provides values like 1, 'Sales', 'New York'
+                                    const insertSql = `INSERT INTO ${tableName} (${columnNames.join(', ')}) VALUES (${rowString});`;
+                                    db.exec(insertSql);
+                                }
+                            });
+                        }
+
+                        createTableModal.classList.add('hidden');
+                        saveDatabase(); // Save the new state of the DB
+                        renderSchema(); // Refresh the schema view
+                        populateSampleQueries(); // Refresh sample queries to include the new table
+                    } catch (e) {
+                        alert(`Error creating table or inserting data: ${e.message}`);
+                    }
+                };
+            }
+
+            // --- EVENT LISTENERS ---
+            executeBtn.addEventListener('click', executeQuery);
+            refreshQueriesBtn.addEventListener('click', populateSampleQueries);
+
+            queryEditor.addEventListener('keydown', (e) => {
+                // Ctrl+Enter or Cmd+Enter to execute
+                if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+                    executeQuery();
+                }
+            });
+
+            // --- START ---
+            setupModal();
+            initDatabase();
+        });
+    </script>
+</body>
+</html>
+
+
+
+
+
+
+
+
